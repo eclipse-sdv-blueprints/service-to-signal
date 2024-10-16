@@ -1,0 +1,46 @@
+#*******************************************************************************
+# Copyright (c) 2024 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0
+#
+# SPDX-License-Identifier: EPL-2.0
+#*******************************************************************************
+FROM ghcr.io/rust-cross/rust-musl-cross:x86_64-musl AS builder-amd64
+ENV BUILDTARGET="x86_64-unknown-linux-musl"
+
+
+FROM ghcr.io/rust-cross/rust-musl-cross:aarch64-musl AS builder-arm64
+ENV BUILDTARGET="aarch64-unknown-linux-musl"
+
+FROM builder-$TARGETARCH AS builder
+ARG TARGETARCH
+
+RUN echo "Rust version:" && rustc --version
+
+# This will speed up fetching the crate.io index in the future, see
+# https://blog.rust-lang.org/2022/06/22/sparse-registry-testing.html
+ENV CARGO_UNSTABLE_SPARSE_REGISTRY=true
+
+RUN echo "Building for $TARGETARCH"
+
+RUN mkdir components
+COPY . components/
+WORKDIR /home/rust/src/components
+
+RUN cargo build --package horn-client --release --target $BUILDTARGET
+RUN mv target/${BUILDTARGET}/release/horn-client /home/rust
+
+FROM scratch
+
+COPY --from=builder /home/rust/horn-client /app/horn-client
+#TODO add licenses for dependencies
+#COPY LICENSES /app/
+
+EXPOSE 15000
+EXPOSE 7446
+ENTRYPOINT [ "/app/horn-client"]
