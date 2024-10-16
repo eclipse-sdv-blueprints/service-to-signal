@@ -23,7 +23,7 @@ use clap::Parser;
 
 use horn_proto::horn_service::{ ActivateHornRequest, ActivateHornResponse, DeactivateHornRequest};
 use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
- 
+
  #[tokio::main]
  async fn main() -> Result<(), Box<dyn std::error::Error>> {
     const ACTIVATE_RESOURCE_ID: u16 = 0x0001;
@@ -32,7 +32,7 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
     const HORN_ENTITY_ID: u32 = 28;
     const AUTHORITY_ID: &str = "horn-service-kuksa";
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
- 
+
     info!("Starting the client for the COVESA Horn service over uProtocol");
 
     let transport = Arc::new(
@@ -40,9 +40,9 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
             .await
             .unwrap(),
     );
-     
-    // The Zenoh transport happens to implement the 
-    //traits for UTransport and LocalUriProvider, 
+
+    // The Zenoh transport happens to implement the
+    //traits for UTransport and LocalUriProvider,
     //which is why it is used twice here.
     let rpc_client = InMemoryRpcClient::new(transport.clone(), transport.clone()).await?;
 
@@ -73,7 +73,7 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
         ..Default::default()
     };
 
-    
+
     let payload = UPayload::try_from_protobuf(horn_request)?;
     match rpc_client
         .invoke_method(
@@ -121,7 +121,7 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
         ..Default::default()
     };
 
-    
+
     let payload = UPayload::try_from_protobuf(horn_request)?;
     match rpc_client
         .invoke_method(
@@ -165,14 +165,14 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
 
  pub fn get_zenoh_config() -> zenoh_config::Config {
      let args = Args::parse();
- 
+
      // Load the config from file path
      let mut zenoh_cfg = match &args.config {
          Some(path) => zenoh_config::Config::from_file(path).unwrap(),
-         None => { 
+         None => {
             zenoh_config::Config::default()
         },
-            
+
      };
 
      // Set connection address
@@ -184,7 +184,7 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
              .unwrap();
         info!("Setting Zenoh connect to {:?}", args.connect);
      }
- 
+
     zenoh_cfg
         .scouting
         .multicast

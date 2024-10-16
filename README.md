@@ -43,7 +43,7 @@ To allow a quick setup of the overall system and in case you do not have an ESP3
 
 ### Kuksa Zenoh Provider
 
-For the integration of the hardware controlling the horn, we use Zenoh as transport. 
+For the integration of the hardware controlling the horn, we use Zenoh as transport.
 So the [horn actuator provider](#embedded-horn-activator) publishes and subscribes on a Zenoh topic which is derived from the respective COVESA VSS signal in the Kuksa Databroker.
 In the case of the Horn, the topic is `Vehicle/Body/Horn/IsActive`.
 It is then the responsibility of the Zenoh-Kuksa-Provider to listen to these topics and forward the messages between the Zenoh network and the Kuksa Databroker using gRPC.
@@ -62,7 +62,7 @@ The Zenoh router routes message between the [Kuksa-Zenoh-Provider](#kuksa-zenoh-
 git submodule update --init
 ```
 
-As an alternative you can pull the service-to-signal repository directly by executing: 
+As an alternative you can pull the service-to-signal repository directly by executing:
 
 ```bash
 git clone --recurse-submodules https://github.com/eclipse-sdv-blueprints/service-to-signal.git
@@ -89,16 +89,16 @@ As a result the `horn-service-kuksa` becomes available on port 15000 on the host
 3. In `components/horn-client/` run:
 
 ```bash
-cargo run 
+cargo run
 ```
 
 For more details read the documentation in the [horn client Readme](./components/horn-client/README.md).
 
 > This requires that you installed the [Rust toolchain](https://rustup.rs) on your computer. As an alternative you can umcomment the section for the `horn-client` in the [service-to-signal-compose.yaml](./service-to-signal-compose.yaml) and re-deploy the modified Docker Compose setup.
 
-4. Check logs for Horn 
+4. Check logs for Horn
 
-To see the status of the Horn and check whether the setup worked you can read the logs of the `software-horn`. To do this run: 
+To see the status of the Horn and check whether the setup worked you can read the logs of the `software-horn`. To do this run:
 
 ```bash
 docker logs software-horn
