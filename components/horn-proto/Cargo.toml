@@ -18,7 +18,7 @@ description = "Project to build protobuf definitions for COVESA uService Horn"
 edition = "2021"
 
 [dependencies]
-protobuf = { workspace = true } 
+protobuf = { workspace = true }
 
 [build-dependencies]
 protoc-bin-vendored = { version = "3.0" }

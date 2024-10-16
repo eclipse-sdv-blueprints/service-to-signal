@@ -42,7 +42,7 @@ mod config;
         info!("Printing the horn signal to the terminal since the connection with Kuksa databroker is not enabled (use -k flag).");
         tokio::spawn(connections::send_to_terminal(rx_kuksa));
     }
-    
+
     UPTransportZenoh::try_init_log_from_env();
     let transport = Arc::new(
          UPTransportZenoh::new(config::get_zenoh_config(args.clone()), "//horn-service-kuksa/1C/1/0")
@@ -55,7 +55,7 @@ mod config;
 
     let (tx_sequence, rx_sequence) = tokio::sync::mpsc::channel(4);
     tokio::spawn(request_processor::receive_requests(rx_sequence, tx_kuksa.clone()));
-    
+
     let activate_horn_op = Arc::new(request_handler::ActivateHorn::new(tx_sequence.clone()));
     rpc_server
         .register_endpoint(None, ACTIVATE_HORN_METHOD_ID, activate_horn_op.clone())
