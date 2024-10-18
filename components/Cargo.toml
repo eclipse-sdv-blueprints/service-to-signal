@@ -33,22 +33,4 @@ tokio = { version = "1.40.0" }
 up-rust = "0.2.0"
 up-transport-zenoh = "0.2.0"
 
-
-zenoh-buffers =  { version = "=1.0.0-beta.3" }
-zenoh-codec = { version = "=1.0.0-beta.3"}
-zenoh-collections = { version =  "=1.0.0-beta.3"}
-zenoh-config = {version = "=1.0.0-beta.3"}
-zenoh-core =  {version = "=1.0.0-beta.3"}
-zenoh-keyexpr = {version = "=1.0.0-beta.3"}
-zenoh-link = {version = "=1.0.0-beta.3"}
-zenoh-macros = { version =  "=1.0.0-beta.3"}
-zenoh-plugin-trait = { version = "=1.0.0-beta.3"}
-zenoh-protocol = { version = "=1.0.0-beta.3"}
-zenoh-result = { version = "=1.0.0-beta.3"}
-zenoh-runtime = { version = "=1.0.0-beta.3"}
-zenoh-sync = {version = "=1.0.0-beta.3"}
-zenoh-task = { version = "=1.0.0-beta.3" }
-zenoh-transport = { version = "=1.0.0-beta.3"}
-zenoh-util = { version =  "=1.0.0-beta.3"}
-
 # not using up-rust 0.2.0 here because, up-transport-zenoh expects up-rust 0.1.5

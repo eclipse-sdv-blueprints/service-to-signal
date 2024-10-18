@@ -45,7 +45,7 @@ mod config;
     
     UPTransportZenoh::try_init_log_from_env();
     let transport = Arc::new(
-         UPTransportZenoh::new(config::get_zenoh_config(args.clone()), "//kuksa_server/1/1/0")
+         UPTransportZenoh::new(config::get_zenoh_config(args.clone()), "//horn-service-kuksa/1C/1/0")
              .await
              .unwrap(),
     );

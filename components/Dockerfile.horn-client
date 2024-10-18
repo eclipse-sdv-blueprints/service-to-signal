@@ -41,6 +41,4 @@ COPY --from=builder /home/rust/horn-client /app/horn-client
 #TODO add licenses for dependencies
 #COPY LICENSES /app/
 
-EXPOSE 15000
-EXPOSE 7446
 ENTRYPOINT [ "/app/horn-client"]

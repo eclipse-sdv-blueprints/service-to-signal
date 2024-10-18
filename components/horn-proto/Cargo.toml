@@ -15,7 +15,7 @@
 name = "horn-proto"
 version = "0.1.0"
 description = "Project to build protobuf definitions for COVESA uService Horn"
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 protobuf = { workspace = true } 

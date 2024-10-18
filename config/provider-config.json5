@@ -35,11 +35,11 @@
 
     // Kuksa configuration
     kuksa: {
-        // URL connection string for the Kuksa Datanroker
+        // URL connection string for the Kuksa Databroker
         databroker_url: "http://kuksa-databroker:55556",
     },
 
-    // List of VSS paths the proider will subscribe to on the Kuksa Datarbroker
+    // List of VSS paths the proider will subscribe to on the Kuksa Databroker
     signals: [
             "Vehicle.Body.Horn.IsActive"
     ]

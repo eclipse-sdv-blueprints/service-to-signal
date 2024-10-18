@@ -28,6 +28,9 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
  async fn main() -> Result<(), Box<dyn std::error::Error>> {
     const ACTIVATE_RESOURCE_ID: u16 = 0x0001;
     const DEACTIVATE_RESOURCE_ID: u16 = 0x0002;
+
+    const HORN_ENTITY_ID: u32 = 28;
+    const AUTHORITY_ID: &str = "horn-service-kuksa";
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
  
     info!("Starting the client for the COVESA Horn service over uProtocol");
@@ -74,7 +77,7 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
     let payload = UPayload::try_from_protobuf(horn_request)?;
     match rpc_client
         .invoke_method(
-            up_rust::UUri::try_from_parts("kuksa_server", 1, 1, ACTIVATE_RESOURCE_ID).unwrap(),
+            up_rust::UUri::try_from_parts(AUTHORITY_ID, HORN_ENTITY_ID, 1, ACTIVATE_RESOURCE_ID).unwrap(),
             CallOptions::for_rpc_request(1_000, None, None, None),
             Some(payload),
         )
@@ -97,7 +100,7 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
 
     match rpc_client
         .invoke_method(
-            up_rust::UUri::try_from_parts("kuksa_server", 1, 1, DEACTIVATE_RESOURCE_ID).unwrap(),
+            up_rust::UUri::try_from_parts(AUTHORITY_ID, HORN_ENTITY_ID, 1, DEACTIVATE_RESOURCE_ID).unwrap(),
             CallOptions::for_rpc_request(1_000, None, None, None),
             Some(deactivate_payload),
         )
@@ -122,7 +125,7 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
     let payload = UPayload::try_from_protobuf(horn_request)?;
     match rpc_client
         .invoke_method(
-            up_rust::UUri::try_from_parts("kuksa_server", 1, 1, ACTIVATE_RESOURCE_ID).unwrap(),
+            up_rust::UUri::try_from_parts(AUTHORITY_ID, HORN_ENTITY_ID, 1, ACTIVATE_RESOURCE_ID).unwrap(),
             CallOptions::for_rpc_request(1_000, None, None, None),
             Some(payload),
         )
@@ -145,7 +148,7 @@ use horn_proto::horn_topics::{HornMode, HornSequence, HornCycle};
 
     match rpc_client
         .invoke_method(
-            up_rust::UUri::try_from_parts("kuksa_server", 1, 1, DEACTIVATE_RESOURCE_ID).unwrap(),
+            up_rust::UUri::try_from_parts(AUTHORITY_ID, HORN_ENTITY_ID, 1, DEACTIVATE_RESOURCE_ID).unwrap(),
             CallOptions::for_rpc_request(1_000, None, None, None),
             Some(deactivate_payload),
         )

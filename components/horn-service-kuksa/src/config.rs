@@ -27,7 +27,7 @@ pub struct Args {
     //#[arg(long)]
     /// The address for the Kuksa Databroker
     pub kuksa_address: String,
-    #[arg(long, short = 'k', env = "KUKSA_ENABLED")]
+    #[arg(long, short = 'k', default_value = "false", env = "KUKSA_ENABLED")]
     /// Enables the connection to the Kuksa Databroker
     /// Otherwise the value of the horn signal is printed to the terminal.
     pub kuksa_enabled: bool,
