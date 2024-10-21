@@ -65,7 +65,7 @@ The Zenoh router routes message between the [Kuksa-Zenoh-Provider](#kuksa-zenoh-
 git submodule update --init
 ```
 
-As an alternative you can pull the service-to-signal repository directly by executing: 
+As an alternative you can pull the service-to-signal repository directly by executing:
 
 ```bash
 git clone --recurse-submodules https://github.com/eclipse-sdv-blueprints/service-to-signal.git
@@ -92,17 +92,24 @@ As a result the `horn-service-kuksa` becomes available on port 15000 on the host
 3. In `components/horn-client/` run:
 
 ```bash
-cargo run 
+cargo run
 ```
 
 For more details read the documentation in the [horn client Readme](./components/horn-client/README.md).
 
 > This requires that you installed the [Rust toolchain](https://rustup.rs) on your computer. As an alternative you can umcomment the section for the `horn-client` in the [service-to-signal-compose.yaml](./service-to-signal-compose.yaml) and re-deploy the modified Docker Compose setup.
 
-4. Check logs for Horn 
+4. Check logs for Horn
 
-To see the status of the Horn and check whether the setup worked you can read the logs of the `software-horn`. To do this run: 
+To see the status of the Horn and check whether the setup worked you can read the logs of the `software-horn`. To do this run:
 
 ```bash
 docker logs software-horn
 ```
+
+### Optional: Configuring and starting the actuator provider (microcontroller implementation)
+
+If you have the necessary hardware, you can replace the software-based horn with a
+microcontroller-based actuator provider. To configure and build the application for
+the microcontroller, follow the instructions provided in the
+[components/actuator-provider README](/components/actuator-provider/README.md).
