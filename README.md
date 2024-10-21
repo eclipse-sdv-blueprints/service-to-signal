@@ -4,11 +4,13 @@ In this Service-To-Signal Blueprint we show how one can implement a service over
 
 <img src=./img/overview.drawio.png>
 
-In order to apply, the requested changes we need a so-called provider to communicate the requested changes from the Kuksa databroker to the underlying hardware. In many current vehicles this might be done over a CAN-bus. Since this blueprint focuses more on future vehicle generations and is intended as a technology showcase, we use Eclipse Zenoh instead.
-We use the Eclipse Kuksa Zenoh Provider which forwards messages between the gRPC-API of the Eclipse KUKSA Databroker and topics in the Zenoh network concerning the relevant and configurable VSS signals.
+In order to apply the requested changes we need a so-called Eclipse Kuksa _Provider_ to communicate the requested changes from the Kuksa Databroker to the underlying hardware.
+In many current vehicles this might be done over a CAN-bus.
+Since this blueprint focuses more on future vehicle generations and is intended as a technology showcase, we use Eclipse Zenoh instead.
+We use the Eclipse Kuksa Zenoh Provider which forwards messages between the gRPC-API of the Eclipse Kuksa Databroker and topics in the Zenoh network concerning the relevant and configurable VSS signals.
 
 Translating between the HTTP/2 based gRPC communication and Eclipse Zenoh makes it possible to connect embedded devices like an Arduino or ESP32 which can use the [PicoZenoh implementation](https://github.com/eclipse-zenoh/zenoh-pico).
-If you do not have such hardware available, there is also the option to use a Zenoh client in software as "software horn".
+If you do not have such hardware available, there is also the option to use a Zenoh client in software as the _software horn_.
 
 ## Components
 
@@ -16,24 +18,18 @@ In the following, we give a more detailed overview of the different involved com
 
 ### Horn Service Implementation
 
-The [horn service implementation](./components/horn-service-kuksa/) provides the interfaces defined in the [COVESA uService for Horn](https://github.com/COVESA/uservices/blob/main/src/main/proto/vehicle/body/horn/v1/horn_service.proto).
-The implementation relies in the [COVESA VSS Signal `Vehicle.Body.Horn.IsActive`](https://github.com/COVESA/vehicle_signal_specification/blob/6024c4b29065b37c074649a1a65396b9d4de9b55/spec/Body/Body.vspec#L65) managed by the Eclipse KUKSA Databroker.
+The [horn service implementation](./components/horn-service-kuksa/) provides the interfaces defined in the [COVESA Horn uService](https://github.com/COVESA/uservices/blob/main/src/main/proto/vehicle/body/horn/v1/horn_service.proto).
+The implementation utilizes the [`Vehicle.Body.Horn.IsActive` COVESA VSS Signal](https://github.com/COVESA/vehicle_signal_specification/blob/6024c4b29065b37c074649a1a65396b9d4de9b55/spec/Body/Body.vspec#L65) managed by the Eclipse KUKSA Databroker.
 We use Eclipse Zenoh as transport for the provided Horn service over Eclipse uProtocol.
 
 ### Horn Client (App)
 
 The App is a consumer of the Horn service and triggers the execution of specific Horn sequences through this interface. There is the [horn-client](./components/horn-client/) which interacts with  the horn service in a pre-defined way and serves as a basic example of how an app can use the horn service.
 
-### up-Simulator
+### Kuksa Databroker
 
-The [up-simulator](https://github.com/eclipse-uprotocol/up-simulator?tab=readme-ov-file) is a general purpose application to interact with services over uProtocol especially for testing purposes.
-A developer can run the up-simulator and execute publish-subscribed actions or remote procedure calls over the transports for Zenoh, Android and SOME/IP in uProtocol.
-The up-simulator is not a direct part of this blueprint but you can use it to test out more complex usage sceneraios of the horn-service.
-
-### KUKSA Databroker
-
-The [KUKSA Databroker](https://github.com/eclipse-kuksa/kuksa-databroker) acts as a vehicle abstraction layer and manages the interaction between applications and vehicle signals defined in the Vehicle Signal Specification.
-Consumers of the kuksa.val.v1 API, implemented by the KUKSA Databroker, can get, subscribe and write to the target or the current value of such a signal within the KUKSA Databroker.
+The [Kuksa Databroker](https://github.com/eclipse-kuksa/kuksa-databroker) acts as a vehicle abstraction layer and manages the interaction between applications and vehicle signals defined in the Vehicle Signal Specification.
+Consumers of the `kuksa.val.v1` API, implemented by the Kuksa Databroker, can get, subscribe and write to the target or the current value of such a signal within the Kuksa Databroker.
 
 ### Embedded Horn Activator
 
@@ -47,7 +43,8 @@ To allow a quick setup of the overall system and in case you do not have an ESP3
 
 ### Kuksa Zenoh Provider
 
-For the integration of the hardware controlling the horn, we use Zenoh as transport. So the [horn actuator provider](#embedded-horn-activator) publishes and subscribes on a Zenoh topic which is derived from the respective COVESA VSS signal in the KUKSA Databroker.
+For the integration of the hardware controlling the horn, we use Zenoh as transport. 
+So the [horn actuator provider](#embedded-horn-activator) publishes and subscribes on a Zenoh topic which is derived from the respective COVESA VSS signal in the Kuksa Databroker.
 In the case of the Horn, the topic is `Vehicle/Body/Horn/IsActive`.
 It is then the responsibility of the Zenoh-Kuksa-Provider to listen to these topics and forward the messages between the Zenoh network and the Kuksa Databroker using gRPC.
 
