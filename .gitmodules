@@ -1,0 +1,4 @@
+
+[submodule "components/kuksa-incubation"]
+	path = components/kuksa-incubation
+	url = https://github.com/eclipse-kuksa/kuksa-incubation.git

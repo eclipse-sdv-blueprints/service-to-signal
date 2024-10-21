@@ -1,0 +1,100 @@
+#*******************************************************************************
+# Copyright (c) 2024 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0
+#
+# SPDX-License-Identifier: EPL-2.0
+#*******************************************************************************
+
+configs:
+  router-config.json5:
+    file: "./config/router-config.json5"
+  provider-config.json5:
+    file: "./config/provider-config.json5"
+
+services:
+  kuksa-databroker:
+    container_name: "kuksa-databroker"
+    image: ghcr.io/eclipse-kuksa/kuksa-databroker:0.4.5
+    command: ["--insecure"]
+    restart: unless-stopped
+    environment:
+      KUKSA_DATABROKER_PORT: "55556"
+    ports:
+      - "55556:55556"
+  zenoh-router:
+    container_name: "zenoh-router"
+    image: eclipse/zenoh:0.11.0
+    restart: unless-stopped
+    ports:
+      - "7447:7447"
+      - "8000:8000"
+    configs:
+      - source: "router-config.json5"
+        target: "/router-config.json5"
+    environment:
+      RUST_LOG: "DEBUG"
+    depends_on:
+      - kuksa-databroker
+    command: ["--config", "/router-config.json5"]
+  zenoh-kuksa-provider:
+    container_name: "zenoh-kuksa-provider"
+    build:
+      context: "./components/kuksa-incubation/zenoh-kuksa-provider"
+      dockerfile: Dockerfile
+      target: final
+    restart: unless-stopped
+    configs:
+      - source: "provider-config.json5"
+        target: "/provider-config.json5"
+    environment:
+      PROVIDER_CONFIG: "provider-config.json5"
+      RUST_LOG: "DEBUG"
+    depends_on:
+      - kuksa-databroker
+      - zenoh-router
+
+  horn-service-kuksa:
+    build:
+      context: "./components"
+      dockerfile: "Dockerfile.horn-service"
+    container_name: "horn-service-kuksa"
+    image: horn-service:latest
+    restart: unless-stopped
+    depends_on:
+      - kuksa-databroker
+    environment:
+      KUKSA_ADDRESS: "http://kuksa-databroker:55556"
+      KUKSA_ENABLED: "true"
+    ports:
+      - 0.0.0.0:15000:15000
+
+  software-horn:
+    build:
+      context: "./components"
+      dockerfile: "Dockerfile.software-horn"
+    container_name: "software-horn"
+    image: software-horn:latest
+    restart: unless-stopped
+    depends_on:
+      - zenoh-kuksa-provider
+      - zenoh-router
+    environment:
+      ROUTER_ADDRESS: "tcp/zenoh-router:7447"
+
+#  horn-client:
+#    build:
+#      context: "./components"
+#      dockerfile: "Dockerfile.horn-client"
+#    container_name: "horn-client"
+#    image: horn-client:latest
+#    restart: unless-stopped
+#    environment:
+#      HORN_ADDRESS: "tcp:/horn-service-kuksa:15000"
+#    depends_on:
+#      - horn-service-kuksa
