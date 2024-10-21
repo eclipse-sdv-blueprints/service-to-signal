@@ -1,0 +1,50 @@
+#*******************************************************************************
+# Copyright (c) 2024 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0
+#
+# SPDX-License-Identifier: EPL-2.0
+#******************************************************************************/
+
+[package]
+name = "horn-service-kuksa"
+version = "0.1.0"
+edition = "2021"
+license.workspace = true
+
+[dependencies]
+async-trait = { workspace = true }
+chrono = { workspace = true }
+clap = { workspace = true }
+horn-proto = { workspace = true }
+kuksa = { git = "https://github.com/eclipse-kuksa/kuksa-databroker.git", branch = "feature/refactor_kuksa_crate", package = "kuksa" }
+log = { workspace = true }
+env_logger = { workspace = true }
+prost-types = { version = "0.11.9" }
+protobuf = { workspace = true }
+tokio = { workspace = true }
+up-rust = { workspace = true }
+up-transport-zenoh = { workspace = true }
+
+
+zenoh-buffers =  { version = "=1.0.0-beta.3" }
+zenoh-codec = { version = "=1.0.0-beta.3" }
+zenoh-collections = { version =  "=1.0.0-beta.3" }
+zenoh-config = {version = "=1.0.0-beta.3" }
+zenoh-core =  {version = "=1.0.0-beta.3" }
+zenoh-keyexpr = {version = "=1.0.0-beta.3" }
+zenoh-link = {version = "=1.0.0-beta.3" }
+zenoh-macros = { version =  "=1.0.0-beta.3" }
+zenoh-plugin-trait = { version = "=1.0.0-beta.3" }
+zenoh-protocol = { version = "=1.0.0-beta.3" }
+zenoh-result = { version = "=1.0.0-beta.3" }
+zenoh-runtime = { version = "=1.0.0-beta.3" }
+zenoh-sync = {version = "=1.0.0-beta.3" }
+zenoh-task = { version = "=1.0.0-beta.3" }
+zenoh-transport = { version = "=1.0.0-beta.3" }
+zenoh-util = { version =  "=1.0.0-beta.3" }
