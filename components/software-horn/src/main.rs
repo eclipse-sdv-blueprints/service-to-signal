@@ -27,23 +27,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
     info!("Starting the software horn connected over Eclipse Zenoh");
 
+    let horn_keyexpr = String::from("Vehicle/Body/Horn/IsActive");
+
     let session = zenoh::open(get_zenoh_config(&args)).res().await.unwrap();
 
     let subscriber = session
-        .declare_subscriber("Vehicle/Body/Horn/IsActive")
+        .declare_subscriber(&horn_keyexpr)
         .res()
         .await
         .unwrap();
 
     let publisher = session
-        .declare_publisher("Vehicle/Body/Horn/IsActive")
+        .declare_publisher(&horn_keyexpr)
         .res()
         .await
         .unwrap();
 
     debug!(
-        "Waiting for messages on topic: Vehicle/Body/Horn/IsActive and connecting to router at {}",
-        args.connect
+        "Waiting for messages on topic: {} and connecting to router at {}",
+        &horn_keyexpr, args.connect
     );
 
     while let Ok(sample) = subscriber.recv_async().await {
