@@ -11,67 +11,95 @@
 * SPDX-License-Identifier: EPL-2.0
 *******************************************************************************/
 
-use std::path::PathBuf;
-use std::str::FromStr;
+use clap::Parser;
 use env_logger::Env;
 use log::{debug, info};
-use clap::Parser;
+use std::path::PathBuf;
+use std::str::FromStr;
 use zenoh::buffers::ZBuf;
-use zenoh::sample::Sample;
 use zenoh::prelude::r#async::*;
+use zenoh::publication::Publisher;
+use zenoh::sample::{Attachment, Sample};
 
- 
- #[tokio::main]
- async fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let args = Args::parse();
     info!("Starting the software horn connected over Eclipse Zenoh");
+
     let session = zenoh::open(get_zenoh_config(&args)).res().await.unwrap();
-    let subscriber = session.declare_subscriber("Vehicle/Body/Horn/IsActive").res().await.unwrap();
-    debug!("Waiting for messages on topic: Vehicle/Body/Horn/IsActive and connecting to router at {}", args.connect);
+
+    let subscriber = session
+        .declare_subscriber("Vehicle/Body/Horn/IsActive")
+        .res()
+        .await
+        .unwrap();
+
+    let publisher = session
+        .declare_publisher("Vehicle/Body/Horn/IsActive")
+        .res()
+        .await
+        .unwrap();
+
+    debug!(
+        "Waiting for messages on topic: Vehicle/Body/Horn/IsActive and connecting to router at {}",
+        args.connect
+    );
+
     while let Ok(sample) = subscriber.recv_async().await {
         let attachement = extract_attachment_as_string(&sample);
         let value = zbuf_to_string(&sample.value.payload).unwrap();
         if attachement == "targetValue" {
             if value == "true" {
                 info!("activate Horn");
+                pub_current_status(&publisher, true).await;
             } else {
                 info!("deactivate Horn");
+                pub_current_status(&publisher, false).await;
             }
         }
     }
+
     Ok(())
- }
+}
 
- pub fn get_zenoh_config(args : &Args) -> zenoh::config::Config {
+pub async fn pub_current_status(publisher: &Publisher<'_>, status: bool) {
+    let mut attachment = Attachment::new();
+    attachment.insert("type", "currentValue");
 
-     // Load the config from file path
-     let mut zenoh_cfg = match &args.config {
-         Some(path) => zenoh::config::Config::from_file(path).unwrap(),
-         None => { 
+    publisher
+        .put(status.to_string())
+        .with_attachment(attachment)
+        .res()
+        .await
+        .unwrap();
+}
+
+pub fn get_zenoh_config(args: &Args) -> zenoh::config::Config {
+    // Load the config from file path
+    let mut zenoh_cfg = match &args.config {
+        Some(path) => zenoh::config::Config::from_file(path).unwrap(),
+        None => {
             debug!("No configuration file provided, using default configuration");
             zenoh::config::Config::default()
-        },
-     };
+        }
+    };
 
-     // Set connection address
-     if !args.connect.is_empty() {
+    // Set connection address
+    if !args.connect.is_empty() {
         let endpoint = EndPoint::from_str(args.connect.as_str()).unwrap();
-        zenoh_cfg
-             .connect
-             .endpoints
-             .insert(0, endpoint);
+        zenoh_cfg.connect.endpoints.insert(0, endpoint);
         debug!("Inserted endpoint from connect argument");
-     }
+    }
 
-     zenoh_cfg
-             .scouting
-             .multicast
-             .set_enabled(Some(false))
-             .unwrap();
+    zenoh_cfg
+        .scouting
+        .multicast
+        .set_enabled(Some(false))
+        .unwrap();
 
-     zenoh_cfg
- }
+    zenoh_cfg
+}
 
 #[derive(clap::Parser, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Args {
