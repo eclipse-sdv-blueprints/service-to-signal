@@ -1,0 +1,46 @@
+// Copyright (c) 2024 Contributors to the Eclipse Foundation
+//
+// See the NOTICE file(s) distributed with this work for additional
+// information regarding copyright ownership.
+//
+// This program and the accompanying materials are made available under the
+// terms of the Eclipse Public License 2.0 which is available at
+// http://www.eclipse.org/legal/epl-2.0
+//
+// SPDX-License-Identifier: EPL-2.0
+
+{
+    // Zenoh configuration
+    zenoh: {
+        // The Zenoh session mode the provider will use
+        mode: "peer",
+
+        // Zenoh endpoints to connect to
+        // Can be used to connect to a zenoh-router without relying on scouting
+        connect: [
+             "tcp/zenoh-router:7447"
+        ],
+
+        scouting: {
+            multicast: {
+                    enabled: false,
+                    // the interface to use
+                    interface: "",
+            }
+        },
+
+        // The key expression to subscribe to
+        key_exp: "Vehicle/**",
+    },
+
+    // Kuksa configuration
+    kuksa: {
+        // URL connection string for the Kuksa Databroker
+        databroker_url: "http://kuksa-databroker:55556",
+    },
+
+    // List of VSS paths the proider will subscribe to on the Kuksa Databroker
+    signals: [
+            "Vehicle.Body.Horn.IsActive"
+    ]
+}

@@ -1,0 +1,11 @@
+{
+  mode: "peer",
+
+  connect: {
+
+    endpoints: [
+      // "<proto>/<address>"
+      "tcp/127.0.0.1:7447"
+    ],
+  }
+}
