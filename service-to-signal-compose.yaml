@@ -32,8 +32,8 @@ services:
     image: eclipse/zenoh:0.11.0
     restart: unless-stopped
     ports:
-      - "7447:7447"
-      - "8000:8000"
+      - "0.0.0.0:7447:7447"
+      - "0.0.0.0:8000:8000"
     configs:
       - source: "router-config.json5"
         target: "/router-config.json5"
