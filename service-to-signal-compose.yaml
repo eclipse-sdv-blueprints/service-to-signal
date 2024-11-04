@@ -95,6 +95,6 @@ services:
 #    image: horn-client:latest
 #    restart: unless-stopped
 #    environment:
-#      HORN_ADDRESS: "tcp:/horn-service-kuksa:15000"
+#      HORN_ADDRESS: "tcp/horn-service-kuksa:15000"
 #    depends_on:
 #      - horn-service-kuksa
