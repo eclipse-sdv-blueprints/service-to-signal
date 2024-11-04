@@ -63,7 +63,6 @@ git submodule update --init
 ```
 
 As an alternative you can pull the service-to-signal repository directly by executing:
-As an alternative you can pull the service-to-signal repository directly by executing:
 
 ```bash
 git clone --recurse-submodules https://github.com/eclipse-sdv-blueprints/service-to-signal.git
@@ -91,7 +90,6 @@ As a result the `horn-service-kuksa` becomes available on port 15000 on the host
 
 ```bash
 cargo run
-cargo run
 ```
 
 For more details read the documentation in the [horn client Readme](./components/horn-client/README.md).
@@ -99,14 +97,12 @@ For more details read the documentation in the [horn client Readme](./components
 > This requires that you installed the [Rust toolchain](https://rustup.rs) on your computer. As an alternative you can umcomment the section for the `horn-client` in the [service-to-signal-compose.yaml](./service-to-signal-compose.yaml) and re-deploy the modified Docker Compose setup.
 
 4. Check logs for Horn
-4. Check logs for Horn
 
 To see the status of the Horn and check whether the setup worked you can read the logs of the `software-horn`. To do this run:
 
 ```bash
 docker logs software-horn
 ```
-
 
 ### Optional: Configuring and starting the actuator provider (microcontroller implementation)
 
