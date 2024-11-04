@@ -103,3 +103,10 @@ To see the status of the Horn and check whether the setup worked you can read th
 ```bash
 docker logs software-horn
 ```
+
+### Optional: Configuring and starting the actuator provider (microcontroller implementation)
+
+If you have the necessary hardware, you can replace the software-based horn with a
+microcontroller-based actuator provider. To configure and build the application for
+the microcontroller, follow the instructions provided in the
+[components/actuator-provider README](/components/actuator-provider/README.md).
