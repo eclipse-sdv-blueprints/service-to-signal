@@ -16,7 +16,7 @@ We use PlatformIO to install the necessary toolchain for building the actuator p
 1. Install PlatformIO Core (CLI) for your system:
    [PlatformIO installation instructions](https://docs.platformio.org/en/latest/core/installation/methods/index.html)
 
-2. Configure the provider application with the header file [config.h](src/config.h).
+2. Configure the provider application with the header file `src/config.h`.
 Here, we need to configure the IP address of the Zenoh router to connect to.
 To adjust the Wi-Fi configuration execute the following command:
 

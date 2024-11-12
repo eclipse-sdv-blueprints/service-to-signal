@@ -2,7 +2,7 @@
 
 In this Service-To-Signal Blueprint we show how one can implement a service over Eclipse uProtocol where the interface definition is part of the COVESA uServices. We use the Rust implementation of the Eclipse Zenoh transport of Eclipse uProtocol. The service implementation further relies on the interaction with VSS Signals, brokered in an Eclipse Kuksa Databroker.
 
-<img src=./img/overview.drawio.png>
+![Overview of Service to Signal Blueprint](./img/overview.drawio.png)
 
 In order to apply the requested changes we need a so-called Eclipse Kuksa _Provider_ to communicate the requested changes from the Kuksa Databroker to the underlying hardware.
 In many current vehicles this might be done over a CAN-bus.
@@ -18,13 +18,13 @@ In the following, we give a more detailed overview of the different involved com
 
 ### Horn Service Implementation
 
-The [horn service implementation](./components/horn-service-kuksa/) provides the interfaces defined in the [COVESA Horn uService](https://github.com/COVESA/uservices/blob/main/src/main/proto/vehicle/body/horn/v1/horn_service.proto).
+The [horn service implementation](./components/horn-service-kuksa/README.md) provides the interfaces defined in the [COVESA Horn uService](https://github.com/COVESA/uservices/blob/main/src/main/proto/vehicle/body/horn/v1/horn_service.proto).
 The implementation utilizes the [`Vehicle.Body.Horn.IsActive` COVESA VSS Signal](https://github.com/COVESA/vehicle_signal_specification/blob/6024c4b29065b37c074649a1a65396b9d4de9b55/spec/Body/Body.vspec#L65) managed by the Eclipse KUKSA Databroker.
 We use Eclipse Zenoh as transport for the provided Horn service over Eclipse uProtocol.
 
 ### Horn Client (App)
 
-The App is a consumer of the Horn service and triggers the execution of specific Horn sequences through this interface. There is the [horn-client](./components/horn-client/) which interacts with  the horn service in a pre-defined way and serves as a basic example of how an app can use the horn service.
+The App is a consumer of the Horn service and triggers the execution of specific Horn sequences through this interface. There is the [horn-client](./components/horn-client/README.md) which interacts with the horn service in a pre-defined way and serves as a basic example of how an app can use the horn service.
 
 ### Kuksa Databroker
 
@@ -50,7 +50,7 @@ It is then the responsibility of the Zenoh-Kuksa-Provider to listen to these top
 
 ### Zenoh Router
 
-The Zenoh router routes message between the [Kuksa-Zenoh-Provider](#kuksa-zenoh-provider) and the Horn ([Embedded Horn Activator](#embedded-horn-activator) or [Software Horn](#software-horn)). We use the upstream available [Docker image](https://zenoh.io/docs/getting-started/quick-test/#run-zenoh-in-docker) of the Zenoh router and reference it in the [Docker Compose file](./service-to-signal-compose.yaml).
+The Zenoh router routes message between the [Kuksa-Zenoh-Provider](#kuksa-zenoh-provider) and the Horn ([Embedded Horn Activator](#embedded-horn-activator) or [Software Horn](#software-horn)). We use the upstream available [Docker image](https://zenoh.io/docs/getting-started/quick-test/#run-zenoh-in-docker) of the Zenoh router and reference it in the Docker Compose file located in `service-to-signal-compose.yaml`.
 
 ## Quick Start
 
@@ -67,7 +67,6 @@ As an alternative you can pull the service-to-signal repository directly by exec
 ```bash
 git clone --recurse-submodules https://github.com/eclipse-sdv-blueprints/service-to-signal.git
 ```
-
 
 2. After that, the easiest way to set up and start the services is by means of using the Docker Compose file in the top
 level directory:
@@ -94,7 +93,7 @@ cargo run
 
 For more details read the documentation in the [horn client Readme](./components/horn-client/README.md).
 
-> This requires that you installed the [Rust toolchain](https://rustup.rs) on your computer. As an alternative you can umcomment the section for the `horn-client` in the [service-to-signal-compose.yaml](./service-to-signal-compose.yaml) and re-deploy the modified Docker Compose setup.
+This requires that you installed the [Rust toolchain](https://rustup.rs) on your computer. As an alternative you can umcomment the section for the `horn-client` in the `service-to-signal-compose.yaml` and re-deploy the modified Docker Compose setup.
 
 4. Check logs for Horn
 
@@ -108,5 +107,5 @@ docker logs software-horn
 
 If you have the necessary hardware, you can replace the software-based horn with a
 microcontroller-based actuator provider. To configure and build the application for
-the microcontroller, follow the instructions provided in the
-[components/actuator-provider README](/components/actuator-provider/README.md).
+the microcontroller, follow the instructions provided for the
+[actuator-provider](./components/actuator-provider/README.md).
