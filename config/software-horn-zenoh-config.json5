@@ -1,0 +1,11 @@
+{
+  mode: "client",
+
+  connect: {
+
+    endpoints: [
+      // "<proto>/<address>"
+      "tcp/zenoh-kuksa-provider:14444"
+    ],
+  },
+}

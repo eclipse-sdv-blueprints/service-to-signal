@@ -13,51 +13,26 @@
 
 use clap::Parser;
 use env_logger::Env;
-use log::{debug, info, warn};
+use log::{debug, error, info, warn};
 use std::path::PathBuf;
-use std::str::FromStr;
-use zenoh::buffers::ZBuf;
-use zenoh::prelude::r#async::*;
-use zenoh::publication::Publisher;
-use zenoh::sample::{Attachment, Sample};
+use zenoh::bytes::ZBytes;
+use zenoh::pubsub::Publisher;
+use zenoh::sample::Sample;
+use zenoh::Config;
 
 #[derive(clap::Parser)]
 pub struct Args {
-    #[arg(short, long)]
-    /// A configuration file.
-    config: Option<PathBuf>,
-    #[arg(long, default_value = "tcp/127.0.0.1:7447", env = "ROUTER_ADDRESS")]
-    /// Endpoints to connect to.
-    connect: String,
+    #[arg(short, long, env = "ZENOH_CONFIG")]
+    /// A Zenoh configuration file.
+    config: PathBuf,
     #[arg(short, long, default_value = "true", env = "IS_SOUND_ENABLED")]
     sound: bool,
 }
 
 impl Args {
-    pub fn get_zenoh_config(&self) -> zenoh::config::Config {
+    pub fn get_zenoh_config(&self) -> Result<Config, Box<dyn std::error::Error>> {
         // Load the config from file path
-        let mut zenoh_cfg = match &self.config {
-            Some(path) => zenoh::config::Config::from_file(path).unwrap(),
-            None => {
-                debug!("No configuration file provided, using default configuration");
-                zenoh::config::Config::default()
-            }
-        };
-
-        // Set connection address
-        if !self.connect.is_empty() {
-            let endpoint = EndPoint::from_str(self.connect.as_str()).unwrap();
-            zenoh_cfg.connect.endpoints.insert(0, endpoint);
-            debug!("Inserted endpoint from connect argument");
-        }
-
-        zenoh_cfg
-            .scouting
-            .multicast
-            .set_enabled(Some(false))
-            .unwrap();
-
-        zenoh_cfg
+        zenoh::config::Config::from_file(&self.config).map_err(|e| e as Box<dyn std::error::Error>)
     }
 }
 
@@ -65,42 +40,41 @@ impl Args {
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let args = Args::parse();
-    let zenoh_config = args.get_zenoh_config();
+    let zenoh_config = args.get_zenoh_config()?;
     info!("Starting the software horn connected over Eclipse Zenoh");
 
     let horn_keyexpr = String::from("Vehicle/Body/Horn/IsActive");
 
     let session = zenoh::open(zenoh_config)
-        .res()
         .await
         .map_err(|e| e as Box<dyn std::error::Error>)?;
 
     let subscriber = session
         .declare_subscriber(&horn_keyexpr)
-        .res()
         .await
         .map_err(|e| e as Box<dyn std::error::Error>)?;
 
     let publisher = session
         .declare_publisher(&horn_keyexpr)
-        .res()
         .await
         .map_err(|e| e as Box<dyn std::error::Error>)?;
-    debug!(
-        "Waiting for messages on topic: {} and connecting to router at {}",
-        &horn_keyexpr, args.connect
-    );
+    debug!("Waiting for messages on topic: {}", &horn_keyexpr);
 
     while let Ok(sample) = subscriber.recv_async().await {
-        let attachement = extract_attachment_as_string(&sample);
-        let value = zbuf_to_string(&sample.value.payload).unwrap();
-        if attachement == "targetValue" {
-            if value == "true" {
-                info!("activate Horn");
-                pub_current_status(&publisher, true).await;
-            } else {
-                info!("deactivate Horn");
-                pub_current_status(&publisher, false).await;
+        if let Some(value_type) = extract_attachment_as_string(&sample) {
+            if value_type == "targetValue" {
+                match zbytes_to_string(sample.payload()) {
+                    Ok(value) => {
+                        if value == "true" {
+                            info!("activate Horn");
+                            pub_current_status(&publisher, true).await;
+                        } else {
+                            info!("deactivate Horn");
+                            pub_current_status(&publisher, false).await;
+                        }
+                    }
+                    Err(e) => error!("Payload from Zenoh message is not a String: {e}"),
+                }
             }
         }
     }
@@ -109,32 +83,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub async fn pub_current_status(publisher: &Publisher<'_>, status: bool) {
-    let mut attachment = Attachment::new();
-    attachment.insert("type", "currentValue");
-
     if let Err(e) = publisher
         .put(status.to_string())
-        .with_attachment(attachment)
-        .res()
+        .attachment("currentValue")
         .await
     {
         warn!("failed to publish current status: {e}");
     }
 }
 
-pub fn extract_attachment_as_string(sample: &Sample) -> String {
-    if let Some(attachment) = sample.attachment() {
-        let bytes = attachment.iter().next().unwrap();
-        String::from_utf8_lossy(bytes.1.as_slice()).to_string()
-    } else {
-        String::new()
-    }
+pub fn extract_attachment_as_string(sample: &Sample) -> Option<String> {
+    sample
+        .attachment()
+        .and_then(|a| a.try_to_string().map(|v| v.to_string()).ok())
 }
 
-pub fn zbuf_to_string(zbuf: &ZBuf) -> Result<String, std::str::Utf8Error> {
-    let mut bytes = Vec::new();
-    for zslice in zbuf.zslices() {
-        bytes.extend_from_slice(zslice.as_slice());
-    }
-    String::from_utf8(bytes).map_err(|e| e.utf8_error())
+pub fn zbytes_to_string(zbuf: &ZBytes) -> Result<String, std::str::Utf8Error> {
+    zbuf.try_to_string().map(|v| v.to_string())
 }

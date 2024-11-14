@@ -11,12 +11,6 @@
 # SPDX-License-Identifier: EPL-2.0
 #*******************************************************************************
 
-configs:
-  router-config.json5:
-    file: "./config/router-config.json5"
-  provider-config.json5:
-    file: "./config/provider-config.json5"
-
 services:
   kuksa-databroker:
     container_name: "kuksa-databroker"
@@ -27,21 +21,19 @@ services:
       KUKSA_DATABROKER_PORT: "55556"
     ports:
       - "55556:55556"
+
   zenoh-router:
     container_name: "zenoh-router"
-    image: eclipse/zenoh:0.11.0
+    image: eclipse/zenoh:1.0.1
     restart: unless-stopped
     ports:
       - "0.0.0.0:7447:7447"
-      - "0.0.0.0:8000:8000"
-    configs:
-      - source: "router-config.json5"
-        target: "/router-config.json5"
+    volumes:
+      - "./config/zenoh-router-config.json5:/zenoh-config.json5"
     environment:
-      RUST_LOG: "DEBUG"
-    depends_on:
-      - kuksa-databroker
-    command: ["--config", "/router-config.json5"]
+      RUST_LOG: "INFO"
+      ZENOH_CONFIG: "/zenoh-config.json5"
+
   zenoh-kuksa-provider:
     container_name: "zenoh-kuksa-provider"
     build:
@@ -49,12 +41,11 @@ services:
       dockerfile: Dockerfile
       target: final
     restart: unless-stopped
-    configs:
-      - source: "provider-config.json5"
-        target: "/provider-config.json5"
+    volumes:
+      - "./config/zenoh-kuksa-provider-config.json5:/provider-config.json5"
     environment:
-      PROVIDER_CONFIG: "provider-config.json5"
-      RUST_LOG: "DEBUG"
+      PROVIDER_CONFIG: "/provider-config.json5"
+      RUST_LOG: "INFO"
     depends_on:
       - kuksa-databroker
       - zenoh-router
@@ -68,11 +59,13 @@ services:
     restart: unless-stopped
     depends_on:
       - kuksa-databroker
+      - zenoh-router
     environment:
       KUKSA_ADDRESS: "http://kuksa-databroker:55556"
       KUKSA_ENABLED: "true"
-    ports:
-      - 0.0.0.0:15000:15000
+      ZENOH_CONFIG: "/zenoh-config.json5"
+    volumes:
+      - "./config/horn-service-zenoh-config.json5:/zenoh-config.json5"
 
   software-horn:
     build:
@@ -83,10 +76,10 @@ services:
     restart: unless-stopped
     depends_on:
       - zenoh-kuksa-provider
-      - zenoh-router
     environment:
-      ROUTER_ADDRESS: "tcp/zenoh-router:7447"
-
+      ZENOH_CONFIG: "/zenoh-config.json5"
+    volumes:
+      - "./config/software-horn-zenoh-config.json5:/zenoh-config.json5"
 #  horn-client:
 #    build:
 #      context: "./components"
