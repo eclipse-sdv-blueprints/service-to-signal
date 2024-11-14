@@ -13,7 +13,7 @@
 
 use clap::Parser;
 use env_logger::Env;
-use log::{debug, info};
+use log::{debug, info, warn};
 use std::path::PathBuf;
 use std::str::FromStr;
 use zenoh::buffers::ZBuf;
@@ -21,28 +21,71 @@ use zenoh::prelude::r#async::*;
 use zenoh::publication::Publisher;
 use zenoh::sample::{Attachment, Sample};
 
+#[derive(clap::Parser)]
+pub struct Args {
+    #[arg(short, long)]
+    /// A configuration file.
+    config: Option<PathBuf>,
+    #[arg(long, default_value = "tcp/127.0.0.1:7447", env = "ROUTER_ADDRESS")]
+    /// Endpoints to connect to.
+    connect: String,
+    #[arg(short, long, default_value = "true", env = "IS_SOUND_ENABLED")]
+    sound: bool,
+}
+
+impl Args {
+    pub fn get_zenoh_config(&self) -> zenoh::config::Config {
+        // Load the config from file path
+        let mut zenoh_cfg = match &self.config {
+            Some(path) => zenoh::config::Config::from_file(path).unwrap(),
+            None => {
+                debug!("No configuration file provided, using default configuration");
+                zenoh::config::Config::default()
+            }
+        };
+
+        // Set connection address
+        if !self.connect.is_empty() {
+            let endpoint = EndPoint::from_str(self.connect.as_str()).unwrap();
+            zenoh_cfg.connect.endpoints.insert(0, endpoint);
+            debug!("Inserted endpoint from connect argument");
+        }
+
+        zenoh_cfg
+            .scouting
+            .multicast
+            .set_enabled(Some(false))
+            .unwrap();
+
+        zenoh_cfg
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     let args = Args::parse();
+    let zenoh_config = args.get_zenoh_config();
     info!("Starting the software horn connected over Eclipse Zenoh");
 
     let horn_keyexpr = String::from("Vehicle/Body/Horn/IsActive");
 
-    let session = zenoh::open(get_zenoh_config(&args)).res().await.unwrap();
+    let session = zenoh::open(zenoh_config)
+        .res()
+        .await
+        .map_err(|e| e as Box<dyn std::error::Error>)?;
 
     let subscriber = session
         .declare_subscriber(&horn_keyexpr)
         .res()
         .await
-        .unwrap();
+        .map_err(|e| e as Box<dyn std::error::Error>)?;
 
     let publisher = session
         .declare_publisher(&horn_keyexpr)
         .res()
         .await
-        .unwrap();
-
+        .map_err(|e| e as Box<dyn std::error::Error>)?;
     debug!(
         "Waiting for messages on topic: {} and connecting to router at {}",
         &horn_keyexpr, args.connect
@@ -69,50 +112,14 @@ pub async fn pub_current_status(publisher: &Publisher<'_>, status: bool) {
     let mut attachment = Attachment::new();
     attachment.insert("type", "currentValue");
 
-    publisher
+    if let Err(e) = publisher
         .put(status.to_string())
         .with_attachment(attachment)
         .res()
         .await
-        .unwrap();
-}
-
-pub fn get_zenoh_config(args: &Args) -> zenoh::config::Config {
-    // Load the config from file path
-    let mut zenoh_cfg = match &args.config {
-        Some(path) => zenoh::config::Config::from_file(path).unwrap(),
-        None => {
-            debug!("No configuration file provided, using default configuration");
-            zenoh::config::Config::default()
-        }
-    };
-
-    // Set connection address
-    if !args.connect.is_empty() {
-        let endpoint = EndPoint::from_str(args.connect.as_str()).unwrap();
-        zenoh_cfg.connect.endpoints.insert(0, endpoint);
-        debug!("Inserted endpoint from connect argument");
+    {
+        warn!("failed to publish current status: {e}");
     }
-
-    zenoh_cfg
-        .scouting
-        .multicast
-        .set_enabled(Some(false))
-        .unwrap();
-
-    zenoh_cfg
-}
-
-#[derive(clap::Parser, Clone, PartialEq, Eq, Hash, Debug)]
-pub struct Args {
-    #[arg(short, long)]
-    /// A configuration file.
-    config: Option<PathBuf>,
-    #[arg(long, default_value = "tcp/127.0.0.1:7447", env = "ROUTER_ADDRESS")]
-    /// Endpoints to connect to.
-    connect: String,
-    #[arg(short, long, default_value = "true", env = "IS_SOUND_ENABLED")]
-    sound: bool,
 }
 
 pub fn extract_attachment_as_string(sample: &Sample) -> String {
@@ -129,5 +136,5 @@ pub fn zbuf_to_string(zbuf: &ZBuf) -> Result<String, std::str::Utf8Error> {
     for zslice in zbuf.zslices() {
         bytes.extend_from_slice(zslice.as_slice());
     }
-    String::from_utf8(bytes).map_err(|e| std::str::Utf8Error::from(e.utf8_error()))
+    String::from_utf8(bytes).map_err(|e| e.utf8_error())
 }

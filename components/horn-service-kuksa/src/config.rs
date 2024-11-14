@@ -13,42 +13,64 @@
 
 use std::path::PathBuf;
 
+use kuksa::Uri;
 use up_transport_zenoh::zenoh_config;
 
 #[derive(clap::Parser, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Args {
     #[arg(short, long)]
-    /// A configuration file.
+    /// A Zenoh configuration file.
     config: Option<PathBuf>,
-    #[arg(short, long, default_value = "tcp/0.0.0.0:15000", env = "SERVICE_LISTEN")]
+
+    #[arg(
+        short,
+        long,
+        default_value = "tcp/0.0.0.0:15000",
+        env = "SERVICE_LISTEN"
+    )]
     /// Endpoints to listen on.
     listen: Vec<String>,
-    #[arg(long, default_value = "http://127.0.0.1:55556", env = "KUKSA_ADDRESS")]
-    //#[arg(long)]
+
+    #[arg(long, default_value = "http://127.0.0.1:55556", env = "KUKSA_ADDRESS", value_parser = valid_uri)]
     /// The address for the Kuksa Databroker
-    pub kuksa_address: String,
+    pub kuksa_address: Uri,
+
     #[arg(long, short = 'k', default_value = "false", env = "KUKSA_ENABLED")]
     /// Enables the connection to the Kuksa Databroker
     /// Otherwise the value of the horn signal is printed to the terminal.
     pub kuksa_enabled: bool,
 }
 
-pub fn get_zenoh_config(args: Args) -> zenoh_config::Config {
-    // Load the config from file path
-    let mut zenoh_cfg = match &args.config {
-        Some(path) => zenoh_config::Config::from_file(path).unwrap(),
-        None => zenoh_config::Config::default(),
-    };
+fn valid_uri(uri: &str) -> Result<Uri, String> {
+    kuksa::Uri::try_from(uri).map_err(|e| format!("invalid Kuksa Databroker URI: {e}"))
+}
 
-    // Set listener address
-    if !args.listen.is_empty() {
+impl Args {
+    pub fn get_zenoh_config(&self) -> Result<zenoh_config::Config, Box<dyn std::error::Error>> {
+        // Load the config from file path
+        let mut zenoh_cfg = self
+            .config
+            .as_ref()
+            .map_or_else(
+                || Ok(zenoh_config::Config::default()),
+                zenoh_config::Config::from_file,
+            )
+            .map_err(|e| e as Box<dyn std::error::Error>)?;
+
+        // Set listener address
+        if !self.listen.is_empty() {
+            zenoh_cfg
+                .listen
+                .endpoints
+                .set(self.listen.iter().map(|v| v.parse().unwrap()).collect())
+                .map_err(|_e| "Failed to set listener endpoints")?;
+        }
+
         zenoh_cfg
-            .listen
-            .endpoints
-            .set(args.listen.iter().map(|v| v.parse().unwrap()).collect())
-            .unwrap();
+            .scouting
+            .multicast
+            .set_enabled(Some(false))
+            .map_err(|_e| "Failed to disable multicast scouting")?;
+        Ok(zenoh_cfg)
     }
-
-    zenoh_cfg.scouting.multicast.set_enabled(Some(false)).unwrap();
-    zenoh_cfg
 }

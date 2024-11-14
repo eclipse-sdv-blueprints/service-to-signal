@@ -26,11 +26,9 @@ async-trait = { version = "0.1" }
 chrono = { version = "0.4", default-features = false }
 clap = { version = "4.5.18", features = ["derive", "env"] }
 horn-proto = { path = "horn-proto" }
-log = { version = "0.4.22"}
+log = { version = "0.4.22" }
 env_logger = { version = "0.11.5" }
 protobuf = { version = "3.5.0" }
 tokio = { version = "1.40.0" }
-up-rust = "0.2.0"
-up-transport-zenoh = "0.2.0"
-
-# not using up-rust 0.2.0 here because, up-transport-zenoh expects up-rust 0.1.5
+up-rust = { version = "0.2.0" }
+up-transport-zenoh = { version = "0.3.0" }

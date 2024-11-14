@@ -38,6 +38,4 @@ COPY --from=builder /home/rust/software-horn /app/software-horn
 #TODO add licenses for dependencies
 #COPY LICENSES /app/
 
-EXPOSE 15000
-EXPOSE 7446
 ENTRYPOINT [ "/app/software-horn"]
