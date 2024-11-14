@@ -12,35 +12,31 @@
 *******************************************************************************/
 
 use kuksa::{proto, Uri};
-use log::{debug, info, error};
-use tokio::select;
+use log::{debug, error, info};
 use std::collections::HashMap;
-use std::process;
 use std::time::SystemTime;
+use tokio::select;
 
-pub(crate) async fn send_to_databroker(mut rx : tokio::sync::mpsc::Receiver<bool>, uri: Uri) {
+pub(crate) async fn send_to_databroker(mut rx: tokio::sync::mpsc::Receiver<bool>, uri: Uri) {
+    info!("Connecting to Kuksa Databroker [{uri}]");
     let mut client = kuksa::Client::new(uri);
     while let Some(is_active) = rx.recv().await {
         debug!("Sending: {:?}", is_active);
         let ts = prost_types::Timestamp::from(SystemTime::now());
-        let datapoints = 
-            HashMap::from([(
-                "Vehicle.Body.Horn.IsActive".to_string(),
-                proto::v1::Datapoint {
-                    timestamp: Some(ts),
-                    value: Some(proto::v1::datapoint::Value::Bool(is_active)),
-                },
-            )]);
-            let set_response = client.set_target_values(datapoints).await;
-            
-            if set_response.is_err() {
-                error!("Failed to send the horn signal to Kuksa databroker and shutting down. The returned error is: '{:?}'.", set_response.err().unwrap());
-                process::exit(1);
-            }
+        let datapoints = HashMap::from([(
+            "Vehicle.Body.Horn.IsActive".to_string(),
+            proto::v1::Datapoint {
+                timestamp: Some(ts),
+                value: Some(proto::v1::datapoint::Value::Bool(is_active)),
+            },
+        )]);
+        if let Err(e) = client.set_target_values(datapoints).await {
+            error!("Failed to send the Horn signal to Kuksa Databroker: {e}");
+        }
     }
 }
 
-pub(crate) async fn send_to_terminal(mut rx : tokio::sync::mpsc::Receiver<bool>) {
+pub(crate) async fn send_to_terminal(mut rx: tokio::sync::mpsc::Receiver<bool>) {
     let mut is_active = Some(false);
     while is_active.is_some() {
         is_active = select! {

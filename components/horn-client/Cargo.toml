@@ -18,27 +18,10 @@ edition = "2021"
 
 [dependencies]
 clap = { workspace = true }
+env_logger = { workspace = true }
 horn-proto = { workspace = true }
 log = { workspace = true }
-env_logger = { workspace = true }
 protobuf = { workspace = true }
-tokio = {workspace = true }
+tokio = { workspace = true }
 up-rust = { workspace = true }
 up-transport-zenoh = { workspace = true }
-
-zenoh-buffers =  { version = "=1.0.0-beta.3" }
-zenoh-codec = { version = "=1.0.0-beta.3" }
-zenoh-collections = { version =  "=1.0.0-beta.3" }
-zenoh-config = {version = "=1.0.0-beta.3" }
-zenoh-core =  {version = "=1.0.0-beta.3" }
-zenoh-keyexpr = {version = "=1.0.0-beta.3" }
-zenoh-link = {version = "=1.0.0-beta.3" }
-zenoh-macros = { version =  "=1.0.0-beta.3" }
-zenoh-plugin-trait = { version = "=1.0.0-beta.3" }
-zenoh-protocol = { version = "=1.0.0-beta.3" }
-zenoh-result = { version = "=1.0.0-beta.3" }
-zenoh-runtime = { version = "=1.0.0-beta.3" }
-zenoh-sync = {version = "=1.0.0-beta.3" }
-zenoh-task = { version = "=1.0.0-beta.3" }
-zenoh-transport = { version = "=1.0.0-beta.3" }
-zenoh-util = { version =  "=1.0.0-beta.3" }

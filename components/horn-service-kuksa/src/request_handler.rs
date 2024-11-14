@@ -11,7 +11,9 @@
 * SPDX-License-Identifier: EPL-2.0
 *******************************************************************************/
 
-use horn_proto::horn_service::{ ActivateHornRequest, ActivateHornResponse, DeactivateHornRequest, DeactivateHornResponse};
+use horn_proto::horn_service::{
+    ActivateHornRequest, ActivateHornResponse, DeactivateHornRequest, DeactivateHornResponse,
+};
 use horn_proto::status::Status;
 use log::info;
 use protobuf::MessageField;
@@ -22,7 +24,9 @@ pub(crate) struct ActivateHorn {
 }
 
 impl ActivateHorn {
-    pub fn new(tx_sequence_channel: tokio::sync::mpsc::Sender<Option<ActivateHornRequest>>) -> Self {
+    pub fn new(
+        tx_sequence_channel: tokio::sync::mpsc::Sender<Option<ActivateHornRequest>>,
+    ) -> Self {
         Self {
             tx_sequence_channel,
         }
@@ -38,8 +42,10 @@ impl RequestHandler for ActivateHorn {
     ) -> Result<Option<UPayload>, ServiceInvocationError> {
         info!("Handle new request to apply horn sequence");
 
-        let req = request_payload.unwrap().
-        extract_protobuf::<ActivateHornRequest>().unwrap();
+        let req = request_payload
+            .unwrap()
+            .extract_protobuf::<ActivateHornRequest>()
+            .unwrap();
         let _ = self.tx_sequence_channel.send(Some(req.clone())).await;
 
         let response = ActivateHornResponse {
@@ -51,14 +57,14 @@ impl RequestHandler for ActivateHorn {
     }
 }
 
-
-
 pub(crate) struct DeactivateHorn {
     tx_sequence_channel: tokio::sync::mpsc::Sender<Option<ActivateHornRequest>>,
 }
 
 impl DeactivateHorn {
-    pub fn new(tx_sequence_channel: tokio::sync::mpsc::Sender<Option<ActivateHornRequest>>) -> Self {
+    pub fn new(
+        tx_sequence_channel: tokio::sync::mpsc::Sender<Option<ActivateHornRequest>>,
+    ) -> Self {
         Self {
             tx_sequence_channel,
         }
@@ -73,11 +79,13 @@ impl RequestHandler for DeactivateHorn {
         request_payload: Option<UPayload>,
     ) -> Result<Option<UPayload>, ServiceInvocationError> {
         info!("Handle new deactivation request for the horn.");
-        
-        //Expect the deactivate horn request 
+
+        //Expect the deactivate horn request
         //to be empty.
-        let _req = request_payload.unwrap().
-        extract_protobuf::<DeactivateHornRequest>().unwrap();
+        let _req = request_payload
+            .unwrap()
+            .extract_protobuf::<DeactivateHornRequest>()
+            .unwrap();
         let _ = self.tx_sequence_channel.send(None).await;
         let response = DeactivateHornResponse {
             status: MessageField::some(Status::new()),
