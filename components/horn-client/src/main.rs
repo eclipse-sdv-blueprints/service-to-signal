@@ -180,44 +180,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 #[derive(clap::Parser, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Args {
-    #[arg(short, long)]
-    /// A configuration file.
-    config: Option<PathBuf>,
-    #[arg(
-        short = 'e',
-        long,
-        default_value = "tcp/127.0.0.1:15000",
-        env = "HORN_ADDRESS"
-    )]
-    /// Endpoints to connect to.
-    connect: Vec<String>,
+    #[arg(short, long, default_value = "zenoh-config.json5")]
+    /// A Zenoh configuration file.
+    config: PathBuf,
 }
 
 impl Args {
     pub fn get_zenoh_config(&self) -> Result<zenoh_config::Config, Box<dyn std::error::Error>> {
         // Load the config from file path
-        let mut zenoh_cfg = match &self.config {
-            Some(path) => zenoh_config::Config::from_file(path)
-                .map_err(|e| e as Box<dyn std::error::Error>)?,
-            None => zenoh_config::Config::default(),
-        };
-
-        // Set connection address
-        if !self.connect.is_empty() {
-            zenoh_cfg
-                .connect
-                .endpoints
-                .set(self.connect.iter().map(|v| v.parse().unwrap()).collect())
-                .unwrap();
-            info!("Setting Zenoh connect to {:?}", self.connect);
-        }
-
-        zenoh_cfg
-            .scouting
-            .multicast
-            .set_enabled(Some(false))
-            .unwrap();
-
-        Ok(zenoh_cfg)
+        zenoh_config::Config::from_file(&self.config).map_err(|e| e as Box<dyn std::error::Error>)
     }
 }

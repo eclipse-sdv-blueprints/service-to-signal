@@ -1,11 +1,10 @@
 {
-  mode: "peer",
+  mode: "client",
 
   connect: {
-
     endpoints: [
       // "<proto>/<address>"
-      "tcp/127.0.0.1:7447"
+      "tcp/zenoh-router:7447"
     ],
-  }
+  },
 }

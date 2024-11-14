@@ -4,10 +4,9 @@ The software horn emulates a horn hardware by logging the horn state and optiona
 
 ## Configuration
 
-It is possible to configure the software horn with the following paramters:
+The service supports several configuration options that can be provided on the command line or via environment variables.
+Please use the `--help` switch to get all relevant information:
 
-| Long Name | Short Name | Environment Variable | Default Value | Description |
-|-----------|------------|----------------------|---------------|-------------|
-| config | c |  |  | Path to set a configuration for the Eclipse Zenoh transport. If no path is set, the default values from Eclipse Zenoh are used. |
-| connect |  | ROUTER_ADDRESS | tcp/127.0.0.1:7447 | Endpoint on which the application tries to connect to an Eclipse Zenoh router. This value is only used if no Zenoh config is set (see `config`) |
-| sound |  | IS_SOUND_ENABLED | true | A feature flag to enable the playback of sound while the Horn is activated. |
+```bash
+cargo run -- --help
+```

@@ -14,30 +14,22 @@
 use std::path::PathBuf;
 
 use kuksa::Uri;
-use up_transport_zenoh::zenoh_config;
+use up_transport_zenoh::zenoh_config::{self, Config};
 
 #[derive(clap::Parser, Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Args {
-    #[arg(short, long)]
+    #[arg(short, long, env = "ZENOH_CONFIG", value_name = "PATH")]
     /// A Zenoh configuration file.
+    /// If not set, the service uses Zenoh's default configuration.
     config: Option<PathBuf>,
 
-    #[arg(
-        short,
-        long,
-        default_value = "tcp/0.0.0.0:15000",
-        env = "SERVICE_LISTEN"
-    )]
-    /// Endpoints to listen on.
-    listen: Vec<String>,
-
-    #[arg(long, default_value = "http://127.0.0.1:55556", env = "KUKSA_ADDRESS", value_parser = valid_uri)]
+    #[arg(long, default_value = "http://127.0.0.1:55556", env = "KUKSA_ADDRESS", value_parser = valid_uri, value_name = "URI")]
     /// The address for the Kuksa Databroker
     pub kuksa_address: Uri,
 
     #[arg(long, short = 'k', default_value = "false", env = "KUKSA_ENABLED")]
-    /// Enables the connection to the Kuksa Databroker
-    /// Otherwise the value of the horn signal is printed to the terminal.
+    /// Enables the connection to the Kuksa Databroker.
+    /// Otherwise the value of the horn signal is printed to the terminal only.
     pub kuksa_enabled: bool,
 }
 
@@ -47,30 +39,10 @@ fn valid_uri(uri: &str) -> Result<Uri, String> {
 
 impl Args {
     pub fn get_zenoh_config(&self) -> Result<zenoh_config::Config, Box<dyn std::error::Error>> {
-        // Load the config from file path
-        let mut zenoh_cfg = self
-            .config
-            .as_ref()
-            .map_or_else(
-                || Ok(zenoh_config::Config::default()),
-                zenoh_config::Config::from_file,
-            )
-            .map_err(|e| e as Box<dyn std::error::Error>)?;
-
-        // Set listener address
-        if !self.listen.is_empty() {
-            zenoh_cfg
-                .listen
-                .endpoints
-                .set(self.listen.iter().map(|v| v.parse().unwrap()).collect())
-                .map_err(|_e| "Failed to set listener endpoints")?;
+        if let Some(path) = self.config.as_ref() {
+            zenoh_config::Config::from_file(path).map_err(|e| e as Box<dyn std::error::Error>)
+        } else {
+            Ok(Config::default())
         }
-
-        zenoh_cfg
-            .scouting
-            .multicast
-            .set_enabled(Some(false))
-            .map_err(|_e| "Failed to disable multicast scouting")?;
-        Ok(zenoh_cfg)
     }
 }
