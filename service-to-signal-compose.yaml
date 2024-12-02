@@ -11,44 +11,28 @@
 # SPDX-License-Identifier: EPL-2.0
 #*******************************************************************************
 
-services:
-  kuksa-databroker:
-    container_name: "kuksa-databroker"
-    image: ghcr.io/eclipse-kuksa/kuksa-databroker:0.4.5
-    command: ["--insecure"]
-    restart: unless-stopped
-    environment:
-      KUKSA_DATABROKER_PORT: "55556"
-    ports:
-      - "55556:55556"
+networks:
+  app-net:
+    driver: overlay
+    attachable: true
+  mcu-net:
+    driver: overlay
+    attachable: true
 
+services:
   zenoh-router:
     container_name: "zenoh-router"
     image: eclipse/zenoh:1.0.1
     restart: unless-stopped
     ports:
       - "0.0.0.0:7447:7447"
+    networks:
+      - "app-net"
     volumes:
       - "./config/zenoh-router-config.json5:/zenoh-config.json5"
     environment:
       RUST_LOG: "INFO"
       ZENOH_CONFIG: "/zenoh-config.json5"
-
-  zenoh-kuksa-provider:
-    container_name: "zenoh-kuksa-provider"
-    build:
-      context: "./components/kuksa-incubation/zenoh-kuksa-provider"
-      dockerfile: Dockerfile
-      target: final
-    restart: unless-stopped
-    volumes:
-      - "./config/zenoh-kuksa-provider-config.json5:/provider-config.json5"
-    environment:
-      PROVIDER_CONFIG: "/provider-config.json5"
-      RUST_LOG: "INFO"
-    depends_on:
-      - kuksa-databroker
-      - zenoh-router
 
   horn-service-kuksa:
     build:
@@ -60,12 +44,44 @@ services:
     depends_on:
       - kuksa-databroker
       - zenoh-router
+    networks:
+      - "app-net"
     environment:
       KUKSA_ADDRESS: "http://kuksa-databroker:55556"
       KUKSA_ENABLED: "true"
       ZENOH_CONFIG: "/zenoh-config.json5"
     volumes:
       - "./config/horn-service-zenoh-config.json5:/zenoh-config.json5"
+
+  kuksa-databroker:
+    container_name: "kuksa-databroker"
+    image: ghcr.io/eclipse-kuksa/kuksa-databroker:0.4.5
+    command: ["--insecure"]
+    restart: unless-stopped
+    environment:
+      KUKSA_DATABROKER_PORT: "55556"
+    ports:
+      - "55556:55556"
+    networks:
+      - "app-net"
+
+  zenoh-kuksa-provider:
+    container_name: "zenoh-kuksa-provider"
+    build:
+      context: "./components/kuksa-incubation/zenoh-kuksa-provider"
+      dockerfile: Dockerfile
+      target: final
+    restart: unless-stopped
+    volumes:
+      - "./config/zenoh-kuksa-provider-config.json5:/provider-config.json5"
+    networks:
+      - "app-net"
+      - "mcu-net"
+    environment:
+      PROVIDER_CONFIG: "/provider-config.json5"
+      RUST_LOG: "INFO"
+    depends_on:
+      - kuksa-databroker
 
   software-horn:
     build:
@@ -76,6 +92,8 @@ services:
     restart: unless-stopped
     depends_on:
       - zenoh-kuksa-provider
+    networks:
+      - "mcu-net"
     environment:
       ZENOH_CONFIG: "/zenoh-config.json5"
     volumes:
