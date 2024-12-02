@@ -8,4 +8,17 @@
       "tcp/zenoh-kuksa-provider:14444"
     ],
   },
+
+  scouting: {
+      multicast: {
+          // iOS does not support multicast on network interfaces by default
+          // it is therefore better to explicitly disable multicast based scouting
+          // we don't need it anyway because we connect to the Zenoh Kuksa Provider's
+          // endpoint directly
+          enabled: false,
+          // the interface to use
+          interface: "",
+      }
+  },
+
 }
