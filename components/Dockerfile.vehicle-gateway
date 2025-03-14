@@ -1,0 +1,33 @@
+# Build stage
+FROM rust:1.81-bullseye AS builder
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    pkg-config \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+
+# Copy both crates
+COPY . /usr/src/components
+
+# Create workspace directory
+WORKDIR /usr/src/components
+
+# Build dependencies - this is the caching Docker layer for all dependencies
+RUN cargo build --package vehicle-gateway --release
+
+# Final stage
+FROM debian:bullseye-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    libssl1.1 \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy the compiled binary from builder
+COPY --from=builder /usr/src/components/target/release/vehicle-gateway /usr/local/bin/
+
+# Set the binary as the entrypoint
+ENTRYPOINT ["vehicle-gateway"]

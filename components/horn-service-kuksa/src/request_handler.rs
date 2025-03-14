@@ -17,7 +17,10 @@ use horn_proto::horn_service::{
 use horn_proto::status::Status;
 use log::info;
 use protobuf::MessageField;
-use up_rust::communication::{RequestHandler, ServiceInvocationError, UPayload};
+use up_rust::{
+    communication::{RequestHandler, ServiceInvocationError, UPayload},
+    UAttributes,
+};
 
 pub(crate) struct ActivateHorn {
     tx_sequence_channel: tokio::sync::mpsc::Sender<Option<ActivateHornRequest>>,
@@ -38,6 +41,7 @@ impl RequestHandler for ActivateHorn {
     async fn handle_request(
         &self,
         _resource_id: u16,
+        _message_attributes: &UAttributes,
         request_payload: Option<UPayload>,
     ) -> Result<Option<UPayload>, ServiceInvocationError> {
         info!("Handle new request to apply horn sequence");
@@ -76,6 +80,7 @@ impl RequestHandler for DeactivateHorn {
     async fn handle_request(
         &self,
         _resource_id: u16,
+        _message_attributes: &UAttributes,
         request_payload: Option<UPayload>,
     ) -> Result<Option<UPayload>, ServiceInvocationError> {
         info!("Handle new deactivation request for the horn.");

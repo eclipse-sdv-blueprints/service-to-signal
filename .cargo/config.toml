@@ -1,0 +1,4 @@
+[env]
+RUST_LOG = "trace"
+MQTT_HOSTNAME = "localhost"
+MQTT_PORT = "1883"

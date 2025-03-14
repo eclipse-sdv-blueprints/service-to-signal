@@ -1,0 +1,16 @@
+[package]
+name = "vehicle-gateway"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+up-transport-zenoh = { workspace = true }
+env_logger = { workspace = true }
+log = { workspace = true }
+tokio = { workspace = true }
+protobuf = { workspace = true }
+up-rust = { workspace = true }
+async-trait = { workspace = true }
+chrono = { workspace = true }
+clap = { workspace = true }
+horn-proto = { workspace = true }

@@ -15,7 +15,10 @@ use clap::Parser;
 use env_logger::Env;
 use log::info;
 use std::sync::Arc;
-use up_rust::communication::{InMemoryRpcServer, RpcServer};
+use up_rust::{
+    communication::{InMemoryRpcServer, RpcServer},
+    StaticUriProvider, UTransport, UUri,
+};
 use up_transport_zenoh::UPTransportZenoh;
 
 mod config;
@@ -23,6 +26,8 @@ mod connections;
 mod request_handler;
 mod request_processor;
 
+const SERVICE_AUTHORITY: &str = "hcp5";
+const SERVICE_UE_ID: u32 = 0x0003;
 const ACTIVATE_HORN_METHOD_ID: u16 = 0x0001;
 const DEACTIVATE_HORN_METHOD_ID: u16 = 0x0002;
 
@@ -42,12 +47,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         tokio::spawn(connections::send_to_terminal(rx_kuksa));
     }
 
-    let zenoh_config = args.get_zenoh_config()?;
     UPTransportZenoh::try_init_log_from_env();
-    let transport = UPTransportZenoh::new(zenoh_config, "//horn-service-kuksa/1C/1/0")
-        .await
-        .map(Arc::new)?;
-    let rpc_server = InMemoryRpcServer::new(transport.clone(), transport);
+
+    let server_uuri = UUri::try_from_parts(SERVICE_AUTHORITY, SERVICE_UE_ID, 1, 0)?;
+    let transport: Arc<dyn UTransport> =
+        UPTransportZenoh::new(args.get_zenoh_config()?, server_uuri)
+            .await
+            .map(Arc::new)?;
+    let transport_uuri = Arc::new(StaticUriProvider::new(SERVICE_AUTHORITY, SERVICE_UE_ID, 1));
+    let rpc_server = InMemoryRpcServer::new(transport.clone(), transport_uuri);
 
     let (tx_sequence, rx_sequence) = tokio::sync::mpsc::channel(4);
     tokio::spawn(request_processor::receive_requests(
