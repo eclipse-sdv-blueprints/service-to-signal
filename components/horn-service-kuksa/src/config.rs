@@ -13,7 +13,7 @@
 
 use std::path::PathBuf;
 
-use kuksa::Uri;
+use http::Uri;
 use up_transport_zenoh::zenoh_config::{self, Config};
 
 #[derive(clap::Parser, Clone, PartialEq, Eq, Hash, Debug)]
@@ -34,7 +34,7 @@ pub struct Args {
 }
 
 fn valid_uri(uri: &str) -> Result<Uri, String> {
-    kuksa::Uri::try_from(uri).map_err(|e| format!("invalid Kuksa Databroker URI: {e}"))
+    Uri::try_from(uri).map_err(|e| format!("invalid Kuksa Databroker URI: {e}"))
 }
 
 impl Args {

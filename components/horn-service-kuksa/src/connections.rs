@@ -11,7 +11,10 @@
 * SPDX-License-Identifier: EPL-2.0
 *******************************************************************************/
 
-use kuksa::{proto, Uri};
+use http::Uri;
+use kuksa_rust_sdk::kuksa::common::ClientTraitV1;
+use kuksa_rust_sdk::kuksa::val::v1::KuksaClient;
+use kuksa_rust_sdk::v1_proto;
 use log::{debug, error, info};
 use std::collections::HashMap;
 use std::time::SystemTime;
@@ -19,15 +22,15 @@ use tokio::select;
 
 pub(crate) async fn send_to_databroker(mut rx: tokio::sync::mpsc::Receiver<bool>, uri: Uri) {
     info!("Connecting to Kuksa Databroker [{uri}]");
-    let mut client = kuksa::Client::new(uri);
+    let mut client = KuksaClient::new(uri);
     while let Some(is_active) = rx.recv().await {
         debug!("Sending: {:?}", is_active);
-        let ts = prost_types::Timestamp::from(SystemTime::now());
+        let ts = Some(prost_types::Timestamp::from(SystemTime::now()));
         let datapoints = HashMap::from([(
             "Vehicle.Body.Horn.IsActive".to_string(),
-            proto::v1::Datapoint {
-                timestamp: Some(ts),
-                value: Some(proto::v1::datapoint::Value::Bool(is_active)),
+            v1_proto::Datapoint {
+                timestamp: ts,
+                value: Some(v1_proto::datapoint::Value::Bool(is_active)),
             },
         )]);
         if let Err(e) = client.set_target_values(datapoints).await {
