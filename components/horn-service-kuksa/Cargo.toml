@@ -22,11 +22,13 @@ async-trait = { workspace = true }
 chrono = { workspace = true }
 clap = { workspace = true }
 horn-proto = { workspace = true }
-kuksa = { git = "https://github.com/eclipse-kuksa/kuksa-databroker.git", branch = "feature/refactor_kuksa_crate", package = "kuksa" }
+kuksa-rust-sdk = "0.1.2"
 log = { workspace = true }
 env_logger = { workspace = true }
-prost-types = { version = "0.11.9" }
+prost-types = { version = "0.12.6" }
 protobuf = { workspace = true }
 tokio = { workspace = true }
 up-rust = { workspace = true }
 up-transport-zenoh = { workspace = true }
+# use http version as in kuksa-rust-sdk
+http = "0.2.12"
