@@ -20,38 +20,38 @@ networks:
     attachable: true
 
 services:
-  zenoh-router:
-    container_name: "zenoh-router"
-    image: eclipse/zenoh:1.0.1
-    restart: unless-stopped
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./config/mosquitto.config:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - app-net
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_sub -t 'test/#' -C 1 -E -W 3 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  ustreamer:
+    #image: ustreamer:latest
+    image: ghcr.io/valtechmobility/up-streamer-rust/configurable-streamer:add_build_and_containerize_pipeline
     ports:
       - "0.0.0.0:7447:7447"
+    expose:
+      - "7447"
     networks:
-      - "app-net"
+      - app-net
     volumes:
-      - "./config/zenoh-router-config.json5:/zenoh-config.json5"
+      - type: bind
+        source: ./config/ustreamer-config
+        target: /app/config
     environment:
-      RUST_LOG: "INFO"
-      ZENOH_CONFIG: "/zenoh-config.json5"
-
-  horn-service-kuksa:
-    build:
-      context: "./components"
-      dockerfile: "Dockerfile.horn-service"
-    container_name: "horn-service-kuksa"
-    image: horn-service:latest
-    restart: unless-stopped
+      - RUST_LOG=debug,zenoh=debug
     depends_on:
-      - kuksa-databroker
-      - zenoh-router
-    networks:
-      - "app-net"
-    environment:
-      KUKSA_ADDRESS: "http://kuksa-databroker:55556"
-      KUKSA_ENABLED: "true"
-      ZENOH_CONFIG: "/zenoh-config.json5"
-    volumes:
-      - "./config/horn-service-zenoh-config.json5:/zenoh-config.json5"
+      mosquitto:
+        condition: service_healthy
 
   kuksa-databroker:
     container_name: "kuksa-databroker"
@@ -64,6 +64,71 @@ services:
       - "55556:55556"
     networks:
       - "app-net"
+
+  healthchecker:
+    image: alpine
+    networks:
+      - app-net
+    command: >
+      /bin/sh -c "
+        apk add --no-cache netcat-openbsd &&
+        while true; do
+          nc -zv ustreamer 7447 2>/dev/null || { echo 'Waiting for ustreamer...'; sleep 1; continue; }
+          nc -zv kuksa-databroker 55556 2>/dev/null || { echo 'Waiting for kuksa-databroker...'; sleep 1; continue; }
+          echo 'All services are up!'
+          exit 0
+        done"
+
+  vehicle-gateway:
+    build:
+      context: "./components"
+      dockerfile: "Dockerfile.vehicle-gateway"
+    image: vehicle-gateway:latest
+    networks:
+      - app-net
+    depends_on:
+      healthchecker:
+        condition: service_completed_successfully # wait for the healthcheck to succeed
+    environment:
+      RUST_LOG: "trace"
+      ZENOH_CONFIG: "/zenoh-config.json5"
+    volumes:
+      - "./config/vehicle-gateway-zenoh-config.json5:/zenoh-config.json5"
+
+  horn-client:
+    build:
+      context: "./components"
+      dockerfile: "Dockerfile.horn-client"
+    image: horn-client:latest
+    networks:
+      - app-net
+    depends_on:
+      healthchecker:
+        condition: service_completed_successfully # wait for the healthcheck to succeed
+    environment:
+      RUST_LOG: "trace"
+      MQTT_HOSTNAME: "mosquitto"
+      MQTT_PORT: 1883
+
+  horn-service-kuksa:
+    build:
+      context: "./components"
+      dockerfile: "Dockerfile.horn-service"
+    container_name: "horn-service-kuksa"
+    image: horn-service:latest
+    restart: unless-stopped
+    depends_on:
+      healthchecker:
+        condition: service_completed_successfully # wait for the healthcheck to succeed
+    networks:
+      - "app-net"
+    environment:
+      RUST_LOG: "trace"
+      KUKSA_ADDRESS: "http://kuksa-databroker:55556"
+      KUKSA_ENABLED: "true"
+      ZENOH_CONFIG: "/zenoh-config.json5"
+    volumes:
+      - "./config/horn-service-zenoh-config.json5:/zenoh-config.json5"
 
   zenoh-kuksa-provider:
     container_name: "zenoh-kuksa-provider"
@@ -81,7 +146,8 @@ services:
       PROVIDER_CONFIG: "/provider-config.json5"
       RUST_LOG: "INFO"
     depends_on:
-      - kuksa-databroker
+      healthchecker:
+        condition: service_completed_successfully # wait for the healthcheck to succeed
 
   software-horn:
     build:
@@ -95,6 +161,7 @@ services:
     networks:
       - "mcu-net"
     environment:
+      RUST_LOG: "trace"
       ZENOH_CONFIG: "/zenoh-config.json5"
     volumes:
       - "./config/software-horn-zenoh-config.json5:/zenoh-config.json5"

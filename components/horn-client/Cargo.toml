@@ -21,7 +21,8 @@ clap = { workspace = true }
 env_logger = { workspace = true }
 horn-proto = { workspace = true }
 log = { workspace = true }
+paho-mqtt = "0.13.1"
 protobuf = { workspace = true }
 tokio = { workspace = true }
 up-rust = { workspace = true }
-up-transport-zenoh = { workspace = true }
+up-transport-mqtt5 = { workspace = true }
