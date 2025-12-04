@@ -15,6 +15,12 @@
         // The Zenoh session mode the provider will use
         mode: "peer",
 
+        connect: {
+            endpoints: [
+               "tcp/zenoh-router:7447",
+            ]
+        },
+
         listen: {
             endpoints: [
                 "tcp/0.0.0.0:14444"

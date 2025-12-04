@@ -12,10 +12,10 @@
  ********************************************************************************/
 
 #define CONFIG_H
-/* This uses WiFi configuration that you can set via project configuration menu
+/* This uses Wi-Fi configuration that you can set via project configuration menu
 
-   If you'd rather not, just change the below entries to strings with
-   the config you want - ie #define ESP_WIFI_SSID "mywifissid"
+   If you'd rather not, change the below entries to strings with
+   the config you want - i.e., #define ESP_WIFI_SSID "mywifissid"
 */
 #define ESP_WIFI_SSID                       CONFIG_ESP_WIFI_SSID
 #define ESP_WIFI_PASS                       CONFIG_ESP_WIFI_PASSWORD
@@ -26,18 +26,18 @@
 #if CLIENT_OR_PEER == 0
 #define MODE                                "client"
 /*
-CONNECT specifies the connection string to the Zenoh router.
+LOCATOR specifies the connection string to the Zenoh router.
 Replace <ip> with the IP address of the machine hosting the blueprint Docker setup.
 Format: "tcp/<ip>:7447#iface=docker0".
 */
-#define CONNECT                             ""
+#define LOCATOR                             ""
 #elif CLIENT_OR_PEER == 1
 #define MODE                                "peer"
 /*
- * Hint: Set this to "<protocol>/<ip>:<port>#<interface>" even when CONNECT is empty to configure the scouting mechanism.
+ * Hint: Set this to "<protocol>/<ip>:<port>#<interface>" even when LOCATOR is empty to configure the scouting mechanism.
  * - Zenoh router (zenohd) typically listens on udp/224.0.0.224:7446
 */
-#define CONNECT                             ""
+#define LOCATOR                             ""
 #else
 #error "Unknown Zenoh operation mode. Check CLIENT_OR_PEER value."
 #endif
